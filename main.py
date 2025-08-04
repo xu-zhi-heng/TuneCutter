@@ -16,16 +16,24 @@ if ffmpeg_path:
 else:
     st.warning("⚠️ 未检测到系统 ffmpeg，请手动选择 ffmpeg.exe 所在路径")
     manual_ffmpeg = True
-    ffmpeg_path_input = st.text_input("📁 请输入 ffmpeg.exe 完整路径，例如：`E:\\ffmpeg\\bin\\ffmpeg.exe`")
-
-    if os.path.isfile(ffmpeg_path_input) and ffmpeg_path_input.lower().endswith("ffmpeg.exe"):
-        ffmpeg_path = ffmpeg_path_input
-        st.success("✅ 已手动设置 ffmpeg 路径")
+    # 用户输入路径
+    ffmpeg_dir_input = st.text_input("📁 请输入 ffmpeg 所在目录，例如：E:\\ffmpeg\\bin\\")
+    # 校验路径是否包含 ffmpeg.exe 和 ffprobe.exe
+    if os.path.isdir(ffmpeg_dir_input):
+        ffmpeg_path = os.path.join(ffmpeg_dir_input, "ffmpeg.exe")
+        ffprobe_path = os.path.join(ffmpeg_dir_input, "ffprobe.exe")
+        if os.path.isfile(ffmpeg_path) and os.path.isfile(ffprobe_path):
+            AudioSegment.converter = ffmpeg_path
+            AudioSegment.ffmpeg = ffmpeg_path
+            # AudioSegment.ffprobe = ffprobe_path
+            st.success(f"✅ 已成功设置 ffmpeg 和 ffprobe: `{ffmpeg_path}` `{ffprobe_path}`")
+        else:
+            st.error("❌ ffmpeg.exe 或 ffprobe.exe 未在该目录下找到，请检查路径")
+            st.stop()
     else:
+        if ffmpeg_dir_input:
+            st.error("❌ 输入的目录不存在")
         st.stop()
-
-AudioSegment.converter = ffmpeg_path
-utils.get_encoder_name = lambda: ffmpeg_path
 
 uploaded_file = st.file_uploader("📤 上传一首音频文件（mp3 或 wav）", type=["mp3", "wav"])
 
